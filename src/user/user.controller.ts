@@ -7,6 +7,7 @@ import { GetUser } from './get-user.decorator';
 import { User } from './user.model';
 import { UserService } from './user.service';
 import { AuthGuard } from '@nestjs/passport';
+import { Roles } from './decorators/roles.decorator';
 
 @Controller('user')
 export class UserController {
@@ -17,7 +18,8 @@ export class UserController {
     ) { }
 
     @Get()
-    async getAllUsers(@Res() res) {
+    // @Roles('doctor')
+    async getAllUsers(@Req() req, @Res() res) {
         const users = await this.userService.getAllUsers();
         return res.status(HttpStatus.OK).json(users)
     }
@@ -54,7 +56,7 @@ export class UserController {
     }
 
     @Post('/test')
-    @UseGuards(AuthGuard())
+    // @UseGuards(AuthGuard())
     test(@Req() req) {
         const user = req.user
         if(!user) {
