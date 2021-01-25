@@ -31,30 +31,6 @@ export class UserService {
 
 
 
-    async createUser(registrationData: CreateUserDto): Promise<void> {
-
-        const { email, password} = registrationData
-
-        const exist = await this.userModel.findOne({ email }) // find user with the search criteria(email)
-
-        if (exist) { // return conflic if user alredy exit
-            throw new ConflictException('Email already exist')
-        }
-
-        registrationData.salt = await bcrypt.genSalt() //generate salt and store it to the database
-        registrationData.password = await this.hashPassword(password, registrationData.salt) // store hashed password by calling hashPassword Function
-
-        const user = new this.userModel(registrationData);
-        await user.save();
-
-    }
-
-
-    // hash password 
-    private hashPassword(password: string, salt: string): Promise<string> {
-        return bcrypt.hash(password, salt);
-    }
-
 
     // edit a User
     async editUser(userId, dataToUpdate: CreateUserDto): Promise<User> {

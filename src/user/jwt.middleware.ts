@@ -1,18 +1,12 @@
 
-import { Injectable, NestMiddleware } from '@nestjs/common';
-import { JwtService } from '@nestjs/jwt';
-import { InjectModel } from '@nestjs/mongoose';
+import { HttpStatus, Injectable, NestMiddleware, UnauthorizedException } from '@nestjs/common';
 import { Request, Response, NextFunction } from 'express';
-import { Model } from 'mongoose';
 import { AuthService } from './auth.service';
-import { User } from './user.model';
-import { UserService } from './user.service';
 
 @Injectable()
 export class JwtMiddleware implements NestMiddleware {
-    valid = null;
-    decode = null;
-    cleanToken = null;
+    decodedToken = null;
+    requestToken = null;
 
     constructor(
         private authService: AuthService
@@ -20,27 +14,31 @@ export class JwtMiddleware implements NestMiddleware {
 
     }
     use(req: Request, res: Response, next: NextFunction) {
-        const token = req.headers.authorization;
-        try {
-            this.cleanToken = token.replace('Bearer', '').trim();
-            this.decode = this.authService.validateToken(this.cleanToken);
-            if (this.decode) {
-                this.decode.then(result => {
+        if (req.headers.authorization) {
+            const token = req.headers.authorization;
+            try {
+                this.requestToken = token.replace('Bearer', '').trim();
+                this.decodedToken = this.authService.validateToken(this.requestToken);
+                this.decodedToken.then(result => {
                     this.authService.getUserByEmail(result.email).then(found => {
-                        // console.log('user', found)
                         delete found.password
+                        //attach user information to req.user
                         req.user = found
                         next()
                     })
+                }).catch(err => {
+                    res.status(HttpStatus.UNAUTHORIZED).json({
+                        message: err.message
+                    })
                 })
-            } else {
+
+            } catch (error) {
+                console.log(error)
                 next()
             }
-
-        } catch (error) {
-            console.log(error)
+        } else {
             next()
         }
-        // next();
+
     }
 }

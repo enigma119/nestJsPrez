@@ -31,11 +31,11 @@ export class UserController {
     @Post('/singup')
     @UsePipes(ValidationPipe) //we imported usePipe to appy validation in our createUserDto
     @UseInterceptors(FileInterceptor('profilePicture', {dest: '/opt/data/files/keurDocteur/profilePic'}))
-    async creatUser(@Res() res, @Body() createUserDto: CreateUserDto, @UploadedFile() profilePicture ) {
+    async sinUp(@Res() res, @Body() createUserDto: CreateUserDto, @UploadedFile() profilePicture ) {
         createUserDto.createdAt = new Date()
         createUserDto.profilePicture = profilePicture.filename
         
-        const user = await this.userService.createUser(createUserDto)
+        const user = await this.AuthService.singUp(createUserDto)
         return res.status(HttpStatus.OK).json({
             message: "User has been created successfully",
             user
@@ -44,20 +44,25 @@ export class UserController {
 
 
     @Post('/singin')
-    async singin(@Body(ValidationPipe) authCredentials: AuthCredentialsDto ) {
-       const user =  await this.AuthService.singIn(authCredentials)
-       if(!user) {
+    async singIn(@Body(ValidationPipe) authCredentials: AuthCredentialsDto ) {
+       const token =  await this.AuthService.singIn(authCredentials)
+       if(!token) {
            throw new UnauthorizedException('Invalid credentials')
        }
-       console.log(user)
-       return user
+    //    console.log(token)
+       return token
     }
 
     @Post('/test')
-    // @UseGuards(AuthGuard('local'))
+    @UseGuards(AuthGuard())
     test(@Req() req) {
-        console.log('return user from controler  ==> ',req.user
-        )
+        const user = req.user
+        if(!user) {
+            throw new UnauthorizedException('That JWT is malformed');
+        }
+        console.log('return user from controler  ==> ',req.user)
+
+
     }
 }
 

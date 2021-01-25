@@ -9,7 +9,6 @@ import { AuthCredentialsDto } from './dto/auth-credentials.dto';
 export class LocalStrategy extends PassportStrategy(Strategy) {
     constructor(private authService: AuthService) {
       super({ usernameField: 'email' });
-      console.log('from- local')
     }
 
     // the following method have to exist in every startegy and ave to be named "validate"
