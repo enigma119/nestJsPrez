@@ -45,7 +45,7 @@ export class TaskController {
         })
     }
 
-    // @Patch('/:id/status')
+    @Patch('/:id/status')
     updateTaskStatus(
         @Param('id') id: string,
         @Body('status') status: StatusEnum,

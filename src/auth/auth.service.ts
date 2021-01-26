@@ -1,39 +1,34 @@
 import { ConflictException, Injectable, UnauthorizedException } from "@nestjs/common";
 import { InjectModel } from "@nestjs/mongoose";
 import { Model } from "mongoose";
-import { CreateUserDto } from "./dto/create-user.dto";
+import { CreateUserDto } from "../user/dto/create-user.dto";
 import * as bcrypt from 'bcrypt'
-import { User } from './user.model'
-import { AuthCredentialsDto } from "./dto/auth-credentials.dto";
-import { JwtPayload } from "./jwt-payload.interface";
-import { JwtService } from '@nestjs/jwt';
-
+import { User } from '../user/user.model'
+import { AuthCredentialsDto } from "../user/dto/auth-credentials.dto";
 const jwt = require('jsonwebtoken');
 const fs = require('fs');
 
 
 @Injectable()
 export class AuthService {
-    authCredentials: AuthCredentialsDto
 
+    authCredentials: AuthCredentialsDto
     PUB_KEY = fs.readFileSync(process.env.PUB_KEY_PATH, 'utf8');
     PRIV_KEY = fs.readFileSync(process.env.PRI_KEY_PATH, 'utf8');
 
     constructor(
         @InjectModel('User') private readonly userModel: Model<User>,
-        private jwtService: JwtService
     ) { }
 
-    async singUp(registrationData: CreateUserDto): Promise<void> {
 
+    //SingUp funtion
+    async singUp(registrationData: CreateUserDto): Promise<void> {
         const { email, password } = registrationData
         const exist = await this.userModel.findOne({ email })
-
         if (exist) {
             throw new ConflictException('User already exist')
         }
 
-        //generate
         registrationData.salt = await bcrypt.genSalt();
         registrationData.password = await this.hashPassword(password, registrationData.salt)
 
@@ -49,17 +44,15 @@ export class AuthService {
 
 
 
+    // SingIn function
     async singIn(authCredentials: AuthCredentialsDto): Promise<{ accessToken: string }> {
         const { email, password } = authCredentials
-        const user = await this.userModel.findOne({ email }) // verify if user exist
+        const user = await this.userModel.findOne({ email })
 
         // validate password
         if (user && await this.validatePassword(password, user.salt, user.password)) {
             const accessToken = await jwt.sign({ email, exp: Math.floor(Date.now() / 1000) + (60 * 60), }, this.PRIV_KEY, { algorithm: 'RS256' });
             return { accessToken }
-            //folowing methos is for passport
-            // const payload: JwtPayload = {email}
-            // const accessToken = await this.jwtService.sign(payload) //jwt sing payload
 
         } else {
             return null
@@ -95,29 +88,13 @@ export class AuthService {
 
 
     // Get User by email
+    // this function is used by the middleware to get user Data that will we attached to the request
     async getUserByEmail(email): Promise<User> {
         const user = await await this.userModel.findOne({ email }, { password: 0, salt: 0, _v: 0 }).exec()
         if (!user) {
             throw new UnauthorizedException('Invalid credentials')
         }
         return user;
-    }
-
-
-
-    // passport verify User with email and passport
-    async verify(username: string, password: string) {
-
-        username = this.authCredentials.email
-        password = this.authCredentials.password
-
-        const user = await this.userModel.findOne({ email: username })
-
-        if (user && await this.validatePassword(password, user.salt, user.password)) {
-            return user
-        } else {
-            return null
-        }
     }
 
 

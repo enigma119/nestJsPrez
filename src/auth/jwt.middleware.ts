@@ -1,5 +1,5 @@
 
-import { HttpStatus, Injectable, NestMiddleware, UnauthorizedException } from '@nestjs/common';
+import { HttpStatus, Injectable, NestMiddleware } from '@nestjs/common';
 import { Request, Response, NextFunction } from 'express';
 import { AuthService } from './auth.service';
 
