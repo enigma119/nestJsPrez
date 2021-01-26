@@ -62,6 +62,7 @@ export class TaskController {
 
 
     // enum validation with custom Pipe for updating Task
+    
     // @Patch('/:id/status')
     // updateTaskStatus(
     //     @Param('id') id: string,
@@ -72,6 +73,3 @@ export class TaskController {
 
 }
 
-
-// enum validation with custom Pipe for updating Task
-// @Body('status', new TaskStatusValidationPipe()) status: StatusEnum,
